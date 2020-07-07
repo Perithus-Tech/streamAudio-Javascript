@@ -1,61 +1,55 @@
-function getAudio() {
-    /**
-     * Navigator -> Objeto global do javascrip que contém informações 
-     * sobre o navegador, ele possui alguns métodos e atributos globais.
-     * umas delas é o "mediaDevices".
-     * 
-     * mediaDevices -> é uma propriedade de leitura onde retorna um objeto que
-     * permite o acesso aos dispositivos de midia conectados, como câmeras e 
-     * o principal o microfone.
-     * 
-     * getUserMedia -> é um método onde é pedido a permissã ao usuário para usar 
-     * alguma midia, como enviamos audio no parametro, ele vai cuidar da parte de
-     * permissão do microfone. (é uma promisse)
-     */
+let mediaRecorder
+var count = 0
 
-    let mediaRecorder; // variavel que irá gravar o audio
+const allAudios = []
 
-    navigator
-        .mediaDevices
-        .getUserMedia({ audio: true })
-        .then(stream => { //recebe o audio 
-            mediaRecorder = new MediaRecorder(stream) // gracando o audio
-            let streamAudio = []
+const button = document.getElementById('play')
+const audio = document.getElementById('audio')
 
-            //ondataavailable -> evento de quando está gravando o áudio
-            mediaRecorder.ondataavailable = data => {
-                streamAudio.push(data.data) // toda informação do audio é adicionada
-            }
+function getAudioMic () {
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      mediaRecorder = new MediaRecorder(stream)
 
-            //onstop -> quando parar de gravar
-            mediaRecorder.onstop = () => {
-                // tratamos o audio capturado e transformamos ele em um blob
-                const blob = new Blob(streamAudio, { type: 'audio/ogg; code=opus' });
-                const reader = new window.FileReader();
-                reader.readAsDataURL(blob); // após isso, transformamos o blob do áudio em string
+      const streamAudio = []
 
-                reader.onloadend = () => {
-                    const audio = document.createElement('audio');
-                    audio.src = reader.result; // Atribui ao audio a string convertida do blob
-                    audio.controls = true; // Esse só peguei da documentação (heheh)
+      mediaRecorder.ondataavailable = data => {
+        streamAudio.push(data.data)
+        console.log(streamAudio)
+      }
 
-                    /**
-                     *  reader.result -> é o audio gravado, como convertemos ele em uma URL,
-                     * podemos enviar ela para o banco ou usar da melhor forma
-                     */
+      mediaRecorder.onstop = () => {
+        console.log('streamAudio')
+        console.log(streamAudio)
 
-                    const div = document.getElementById('container');
+        const blob = new Blob(streamAudio, { type: 'audio/ogg; code=opus' })
 
-                    div.append(audio);
-                }
-            }
+        const reader = new window.FileReader()
+        reader.readAsDataURL(blob)
 
-            mediaRecorder.start()
+        reader.onloadend = () => {
+          alert(reader.result)
+          audio.src = reader.result
+          audio.controls = true
+        }
+      }
 
-            setTimeout(() => mediaRecorder.stop(), 5000)
-        }).catch(err => {
-            alert(err)
-        })
+      mediaRecorder.start()
+
+      setTimeout(() => mediaRecorder.stop(), 2000)
+    })
 }
 
-getAudio()
+audio.onended = function () {
+  if (count <= 3) {
+    count = count + 1
+    this.play()
+  }
+}
+
+button.addEventListener('click', function () {
+  count = count + 1
+  audio.play()
+})
+
+getAudioMic()
